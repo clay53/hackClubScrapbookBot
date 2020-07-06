@@ -1,3 +1,5 @@
+Add bot: https://discordapp.com/channels/369305067989499904/369305067989499906/729785950053335100
+
 # Running
 
 ## GNU/Linux

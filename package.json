@@ -1,0 +1,16 @@
+{
+  "name": "hackclubscrapbookbot",
+  "version": "1.0.0",
+  "description": "Discord bot for posting your scrapbook posts into your Discord server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "clay53",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.2.0",
+    "lowdb": "^1.0.0",
+    "request": "^2.88.2"
+  }
+}

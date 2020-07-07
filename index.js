@@ -32,7 +32,9 @@ client.on('message', msg => {
                 "\`track <username>...\` - sync user(s)'s scrapbook post to active channel\n" +
                 "\`notrack <username>...\` - stop syncing user(s)'s scrapbook post to active channel\n" +
                 "\`notify <@role>\` - notify specific role of new posts\n" +
-                "\`nonotify\` - stop notifications"
+                "\`nonotify\` - stop notifications\n" +
+                "\`test\` - make a test notification\n" +
+                "\`info\` - display some neat info"
                 
             );
             return;
@@ -136,6 +138,16 @@ client.on('message', msg => {
                         }
                     ]
                 })
+                return;
+            case ("info"):
+                var tracking = Object.keys(db.get(`channels.${msg.channel.id}.users`).value());
+                msg.channel.send(
+                    (tracking.length > 0 ? `Currently tracking: ${tracking}\n` : "Not tracking any user\n") +
+                    (msg.guild && db.has(`channels.${msg.channel.id}.notify`).value() ? `Will notify role with id ${db.get(`channels.${msg.channel.id}.notify`).value()} of new posts\n` : '') +
+                    `Contribute to the code: https://github.com/clay53/hackClubScrapbookBot\n` +
+                    `Donate (BCH): \`qra9n9q2g23dfs3z6jnduletu3er4892jsmdemyt5u\`\n` +
+                    `Currently syncing across ${Object.keys(db.get('channels').value()).length} channels!`
+                );
                 return;
         }
     }

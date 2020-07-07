@@ -1,5 +1,6 @@
-Add bot: https://discordapp.com/channels/369305067989499904/369305067989499906/729785950053335100
-Join Discord: https://discord.gg/725n4xZ
+# [Invite Link](https://discordapp.com/channels/369305067989499904/369305067989499906/729785950053335100)
+
+# [Join Discord](https://discord.gg/725n4xZ)
 
 # Running
 

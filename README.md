@@ -24,3 +24,6 @@
     * `chmod +x ./run.sh`
 * Run run file
     * `./run.sh`
+
+# Disclaimer
+This project is not affiliated with Hack Club in any way. Please do not contact them for seeking help with this software.

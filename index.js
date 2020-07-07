@@ -127,6 +127,6 @@ setInterval(() => {
             console.error("Failed to get scrapbook posts", body);
         }
     })
-}, 10000);
+}, 20000);
 
 client.login(TOKEN);

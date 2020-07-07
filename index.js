@@ -30,12 +30,15 @@ client.on('message', msg => {
                 "prefix: !scrapbook\n" +
                 "help - Displays list of commands\n" +
                 "start <username> - sync a user's scrapbook post to active channel\n" +
-                "stop - stops syncing current user in channel"
+                "stop - stops syncing current user in channel\n" +
+                "notify <@role> - notify specific role of new posts\n" +
+                "nonotify - stop notifications"
             );
             return;
         }
 
         switch(parts[1].toLowerCase()) {
+            case ("add")
             case ("start"):
                 if (parts.length === 3) {
                     if (msg.member) {
@@ -61,8 +64,52 @@ client.on('message', msg => {
                         msg.reply("couldn't get member status of user. This is usually caused by the command being run in a DM which is unsupported.");
                     }
                 } else {
-                    msg.reply("start command requires 1 option (user)");
+                    msg.reply("start command requires 1 option (user).");
                 }
+                return;
+            case ("notify"):
+                if (!msg.guild) return msg.reply("notify can only be called from in a guild.");
+                if (parts.length !== 3) return msg.reply("notify commpand requires 1 option (role).");
+                if (!msg.member) return msg.reply("couldn't get member status of user. This is usually caused by the command being run in a DM which is unsupported.");
+                if (!msg.member.hasPermission("ADMINISTRATOR")) return msg.reply("only administrators may set notification role.");
+                if (!db.has(`channels.${msg.channel.id}`).value()) return msg.reply("must have already started scrapbook in this channel.");
+
+                if (parts[2].length !== 22) return (msg.reply("failed to get role id. Did you provide a valid role?"));
+
+                let roleId = parts[2].substr(3, 18);
+
+                msg.guild.roles.fetch(roleId).then(role => {
+                    if (role === null) return msg.reply("role does not exist.");
+                    db.set(`channels.${msg.channel.id}.notify`, roleId).write();
+                    msg.reply(`now notifying @ ${role.name} of new scrapbook posts!`);
+                }).catch(err => {
+                    msg.reply("failed to fetch role.");
+                    console.error("Failed to fetch role ", err);
+                });
+                return;
+            case ("nonotify"):
+                if (!msg.guild) return msg.reply("nonotify can only be called from in a guild.");
+                if (!msg.member) return msg.reply("couldn't get member status of user. This is usually caused by the command being run in a DM which is unsupported.");
+                if (!msg.member.hasPermission("ADMINISTRATOR")) return msg.reply("only administrators may set notification role.");
+                if (!db.has(`channels.${msg.channel.id}`).value()) return msg.reply("must have already started scrapbook in this channel.");
+                if (!db.has(`channels.${msg.channel.id}.notify`).value()) return msg.reply("can't stop notifications if no one is being notified.");
+
+                db.unset(`channels.${msg.channel.id}.notify`).write();
+                msg.reply("stopped notifications for this channel.");
+                return;
+            case ("test"):
+                if (!msg.member) return msg.reply("couldn't get member status of user. This is usually caused by the command being run in a DM which is unsupported.");
+                if (!msg.member.hasPermission("ADMINISTRATOR")) return msg.reply("only administrators may send test posts.");
+                if (!db.has(`channels.${msg.channel.id}`).value()) return msg.reply("must have already started scrapbook in this channel.");
+
+                sendPost(msg.channel, {
+                    text: "This is a test post!",
+                    attachments: [
+                        {
+                            url: "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png"
+                        }
+                    ]
+                })
                 return;
             case ("stop"):
                 if (msg.member) {
@@ -104,9 +151,7 @@ setInterval(() => {
                         if (channel.lastId !== post.id) {
                             updatedChannelCount++;
                             client.channels.fetch(channelId).then(c => {
-                                c.send(post.text, {
-                                    files: post.attachments.map(file => file.url)
-                                });
+                                sendPost(c, post);
                             }).catch(err => {
                                 if (err.code === 10003 || err.code === 50001) {
                                     console.log(`Channel ${channelId} is inaccessible, removing...`);
@@ -129,5 +174,14 @@ setInterval(() => {
         }
     })
 }, 20000);
+
+function sendPost(channel, post) {
+    channel.send(
+        `${db.has(`channels.${channel.id}.notify`).value() ? `<@&${db.get(`channels.${channel.id}.notify`).value()}> ` : ''}${post.text}`,
+        {
+            files: post.attachments.map(file => file.url)
+        }
+    );
+}
 
 client.login(TOKEN);

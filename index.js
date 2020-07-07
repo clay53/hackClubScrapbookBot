@@ -126,6 +126,10 @@ client.on('message', msg => {
 
                 sendPost(msg.channel, {
                     text: "This is a test post!",
+                    user: {
+                        username: "testman",
+                        streakCount: 999
+                    },
                     attachments: [
                         {
                             url: "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png"
@@ -184,7 +188,7 @@ setInterval(() => {
 
 function sendPost(channel, post) {
     channel.send(
-        `${db.has(`channels.${channel.id}.notify`).value() ? `<@&${db.get(`channels.${channel.id}.notify`).value()}> ` : ''}${post.text}`,
+        `${db.has(`channels.${channel.id}.notify`).value() ? `<@&${db.get(`channels.${channel.id}.notify`).value()}> ` : ''}${post.user.username} is now on a ${post.user.streakCount} day streak!\n${post.text}`,
         {
             files: post.attachments.map(file => file.url)
         }

@@ -12,7 +12,7 @@ if (!process.env.TOKEN) {
 
 const low = require('lowdb');
 const { serialize } = require('lowdb/adapters/FileSync');
-const db = low(new (require('lowdb/adapters/FileSync'))('db.json'));
+const db = low(new (require('lowdb/adapters/FileSync'))(__dirname + '/db.json'));
 
 db.defaults({channels: {}}).write();
 

@@ -1,4 +1,4 @@
-# [Invite Link](https://discordapp.com/channels/369305067989499904/369305067989499906/729785950053335100)
+# [Invite Link](https://discord.com/oauth2/authorize?client_id=729782836009238649&scope=bot&permissions=321600)
 
 # [Join Discord](https://discord.gg/725n4xZ)
 

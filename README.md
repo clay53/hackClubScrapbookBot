@@ -2,6 +2,11 @@
 
 # [Join Discord](https://discord.gg/725n4xZ)
 
+# Donate
+Donate Bitcoin Cash to help support contributors!  
+`qra9n9q2g23dfs3z6jnduletu3er4892jsmdemyt5u`  
+See history & balance: [Blockchair](https://blockchair.com/bitcoin-cash/address/qrczukq9sv9f6mkxht2wtsrhtj306yxw7c3hv02muh) [Spreadsheet](https://docs.google.com/spreadsheets/d/1DnCsiohHCQUcLR_MnX7qnwg8FxKzNgABxeRL3cawPPQ/edit?usp=sharing)
+
 # Running
 
 ## GNU/Linux

@@ -108,7 +108,7 @@ setInterval(() => {
                                     files: post.attachments.map(file => file.url)
                                 });
                             }).catch(err => {
-                                if (err.code === 10003) {
+                                if (err.code === 10003 || err.code === 50001) {
                                     console.log(`Channel ${channelId} is inaccessible, removing...`);
                                     db.unset(`channels.${channelId}`).write();
                                 } else {

@@ -32,6 +32,7 @@ client.on('message', msg => {
                 "start <username> - sync a user's scrapbook post to active channel\n" +
                 "stop - stops syncing current user in channel"
             );
+            return;
         }
 
         switch(parts[1].toLowerCase()) {

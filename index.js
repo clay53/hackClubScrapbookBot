@@ -28,51 +28,74 @@ client.on('message', msg => {
         if (parts.length === 1 || parts[1].toLowerCase() === "help") {
             msg.channel.send(
                 "prefix: !scrapbook\n" +
-                "help - Displays list of commands\n" +
-                "start <username> - sync a user's scrapbook post to active channel\n" +
-                "stop - stops syncing current user in channel\n" +
-                "notify <@role> - notify specific role of new posts\n" +
-                "nonotify - stop notifications"
+                "\`help\` - Displays list of commands\n" +
+                "\`track <username>...\` - sync user(s)'s scrapbook post to active channel\n" +
+                "\`notrack <username>...\` - stop syncing user(s)'s scrapbook post to active channel\n" +
+                "\`notify <@role>\` - notify specific role of new posts\n" +
+                "\`nonotify\` - stop notifications"
+                
             );
             return;
         }
 
         switch(parts[1].toLowerCase()) {
-            case ("add")
-            case ("start"):
-                if (parts.length === 3) {
-                    if (msg.member) {
-                        if (msg.member.hasPermission("ADMINISTRATOR")) {
-                            if (parts[2].length > 0) {
-                                if (!db.has(`channels.${msg.channel.id}`).value()) {
-                                    db.set(`channels.${msg.channel.id}`, {
-                                        username: parts[2],
-                                        lastId: ""
-                                    }).write();
-                                    
-                                    msg.reply("Starting sync...");
-                                } else {
-                                    msg.reply(`this channel is already syncing \`${db.get(`channels.${msg.channel.id}.username`).value()}\` run \`!scrapbook stop\` to sync a new user.`);
-                                }
-                            } else {
-                                msg.reply("invalid username");
-                            }
+            case ("track"):
+                if (parts.length < 3) return msg.reply("track command requires at least 1 option (username).");
+                if (!msg.member) return msg.reply("couldn't get member status of user. This is usually caused by the command being run in a DM which is unsupported.");
+                if (!msg.member.hasPermission("ADMINISTRATOR")) return msg.reply("only administrators may set notification role.");
+
+                var newTracking = "";
+
+                for (let i = 2; i < parts.length; i++) {
+                    let username = parts[i];
+                    if (username.length > 0) {
+                        let path = `channels.${msg.channel.id}.users.${username}`;
+                        if (!db.has(path).value()) {
+                            db.set(path, {
+                                ids: []
+                            }).write();
+                            newTracking += username + ', ';
                         } else {
-                            msg.reply("only administrators may start syncing.");
+                            msg.reply(`already tracking ${username} in this channel"`);
                         }
                     } else {
-                        msg.reply("couldn't get member status of user. This is usually caused by the command being run in a DM which is unsupported.");
+                        msg.reply(`invalid username "${username}"`);
                     }
-                } else {
-                    msg.reply("start command requires 1 option (user).");
                 }
+                
+                if (newTracking.length > 0) msg.reply(`now tracking ${newTracking.substr(0, newTracking.length-2)}!`);
+
+                return;
+            case ("notrack"):
+                if (parts.length < 3) return msg.reply("notrack command requires at least 1 option (username).");
+                if (!msg.member) return msg.reply("couldn't get member status of user. This is usually caused by the command being run in a DM which is unsupported.");
+                if (!msg.member.hasPermission("ADMINISTRATOR")) return msg.reply("only administrators may set notification role.");
+
+                var stoppedTracking = "";
+
+                for (let i = 2; i < parts.length; i++) {
+                    let username = parts[i];
+                    if (username.length > 0) {
+                        let path = `channels.${msg.channel.id}.users.${username}`;
+                        if (db.has(path).value()) {
+                            db.unset(path).write();
+                            stoppedTracking += username + ', ';
+                        } else {
+                            msg.reply(`already not tracking ${username} in this channel"`);
+                        }
+                    } else {
+                        msg.reply(`invalid username "${username}"`);
+                    }
+                }
+                
+                if (stoppedTracking.length > 0) msg.reply(`stopped tracking ${stoppedTracking.substr(0, stoppedTracking.length-2)}!`);
+
                 return;
             case ("notify"):
                 if (!msg.guild) return msg.reply("notify can only be called from in a guild.");
                 if (parts.length !== 3) return msg.reply("notify commpand requires 1 option (role).");
                 if (!msg.member) return msg.reply("couldn't get member status of user. This is usually caused by the command being run in a DM which is unsupported.");
                 if (!msg.member.hasPermission("ADMINISTRATOR")) return msg.reply("only administrators may set notification role.");
-                if (!db.has(`channels.${msg.channel.id}`).value()) return msg.reply("must have already started scrapbook in this channel.");
 
                 if (parts[2].length !== 22) return (msg.reply("failed to get role id. Did you provide a valid role?"));
 
@@ -91,7 +114,6 @@ client.on('message', msg => {
                 if (!msg.guild) return msg.reply("nonotify can only be called from in a guild.");
                 if (!msg.member) return msg.reply("couldn't get member status of user. This is usually caused by the command being run in a DM which is unsupported.");
                 if (!msg.member.hasPermission("ADMINISTRATOR")) return msg.reply("only administrators may set notification role.");
-                if (!db.has(`channels.${msg.channel.id}`).value()) return msg.reply("must have already started scrapbook in this channel.");
                 if (!db.has(`channels.${msg.channel.id}.notify`).value()) return msg.reply("can't stop notifications if no one is being notified.");
 
                 db.unset(`channels.${msg.channel.id}.notify`).write();
@@ -111,22 +133,6 @@ client.on('message', msg => {
                     ]
                 })
                 return;
-            case ("stop"):
-                if (msg.member) {
-                    if (msg.member.hasPermission("ADMINISTRATOR")) {
-                        if (db.has(`channels.${msg.channel.id}`).value()) {
-                            db.unset(`channels.${msg.channel.id}`).write();
-                            msg.reply("stopped syncing this channel.");
-                        } else {
-                            msg.reply("not syncing any user.");
-                        }
-                    } else {
-                        msg.reply("only administrators may stop syncing.");
-                    }
-                } else {
-                    msg.reply("couldn't get member status of user. This is usually caused by the command being run in a DM which is unsupported.");
-                }
-                return;
         }
     }
 });
@@ -135,40 +141,41 @@ client.on('message', msg => {
 setInterval(() => {
     request('https://scrapbook.hackclub.com/api/posts', {json: true}, (err, res, body) => {
         if (!err) {
-            console.log("Updating...");
-            var updatedChannelCount = 0;
+            console.log("Syncing...");
+            var postCount = 0;
 
             let channels = db.get('channels').value();
-            var searchChannelIds = Object.keys(channels);
-            for (let i = 0; i < body.length && searchChannelIds.length > 0; i++) {
-                for (let j = 0; j < searchChannelIds.length; j++) {
-                    let channelId = searchChannelIds[j];
+            let channelIds = Object.keys(channels)
+            for (let i = body.length-1; i > 0; i--) {
+                let post = body[i];
+                for (let j = 0; j < channelIds.length; j++) {
+                    let channelId = channelIds[j];
                     let channel = channels[channelId];
 
-                    let post = body[i];
-
-                    if (channel.username === post.user.username) {
-                        if (channel.lastId !== post.id) {
-                            updatedChannelCount++;
-                            client.channels.fetch(channelId).then(c => {
-                                sendPost(c, post);
-                            }).catch(err => {
-                                if (err.code === 10003 || err.code === 50001) {
-                                    console.log(`Channel ${channelId} is inaccessible, removing...`);
-                                    db.unset(`channels.${channelId}`).write();
-                                } else {
-                                    console.error(`Failed to fetch channel ${channelId}`, err);
-                                }
-                            });
-                            db.set(`channels.${channelId}.lastId`, post.id).write();
+                    let usernames = Object.keys(channel.users);
+                    for (let k = 0; k < usernames.length; k++) {
+                        let username = usernames[k];
+                        let ids = channel.users[username].ids || [];
+                        if (username === post.user.username) {
+                            if (!ids.includes(post.id)) {
+                                postCount++;
+                                client.channels.fetch(channelId).then(c => {
+                                    sendPost(c, post);
+                                    db.get(`channels.${channelId}.users.${username}.ids`).push(post.id).write();
+                                }).catch(err => {
+                                    if (err.code === 10003 || err.code === 50001) {
+                                        console.log(`Channel ${channelId} is inaccessible, removing...`);
+                                        db.unset(`channels.${channelId}`).write();
+                                    } else {
+                                        console.error(`Failed to fetch channel ${channelId}`, err);
+                                    }
+                                });
+                            }
                         }
-
-                        searchChannelIds.splice(j, 1);
-                        j--;
                     }
                 }
             }
-            console.log(`Updated ${updatedChannelCount} channels!`);
+            console.log(`Made ${postCount} posts!`);
         } else {
             console.error("Failed to get scrapbook posts", body);
         }

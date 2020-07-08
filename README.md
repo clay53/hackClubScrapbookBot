@@ -2,6 +2,8 @@
 
 # [Join Discord](https://discord.gg/725n4xZ)
 
+# [Contributing](CONTRIBUTING.md)
+
 # Donate
 Donate Bitcoin Cash to help support contributors!  
 `qra9n9q2g23dfs3z6jnduletu3er4892jsmdemyt5u`  

@@ -156,7 +156,7 @@ client.on('message', msg => {
 // Sync channels
 setInterval(() => {
     request('https://scrapbook.hackclub.com/api/posts', {json: true}, (err, res, body) => {
-        if (!err) {
+        if (!err && res.statusCode == 200) {
             console.log("Syncing...");
             var postCount = 0;
 

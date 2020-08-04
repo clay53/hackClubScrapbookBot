@@ -140,7 +140,7 @@ client.on('message', msg => {
                 })
                 return;
             case ("info"):
-                var tracking = Object.keys(db.get(`channels.${msg.channel.id}.users`).value());
+                var tracking = Object.keys(db.get(`channels.${msg.channel.id}.users`).value() || {});
                 msg.channel.send(
                     (tracking.length > 0 ? `Currently tracking: ${tracking}\n` : "Not tracking any user\n") +
                     (msg.guild && db.has(`channels.${msg.channel.id}.notify`).value() ? `Will notify role with id ${db.get(`channels.${msg.channel.id}.notify`).value()} of new posts\n` : '') +
